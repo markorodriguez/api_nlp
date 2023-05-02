@@ -9,12 +9,12 @@ let nlpModel
 const training = async () => {
 
   const labels = {
-    negativo: -1,
-    positivo: 1,
+    "negativo": 0,
+    "positivo": 1,
   };
 
   const normalizer = new NormalizerEs();
-
+  /*
   const csvData = fs
     .readFileSync("data.csv", "utf8")
     .split("\n")
@@ -26,11 +26,24 @@ const training = async () => {
         score: labels[lineParts[1]],
       };
     });
+  */
+  const csvData = JSON.parse(fs.readFileSync("out.json", "utf8")).map((item) => {
+    return {
+      text: normalizer.normalize(item.text.toLowerCase().trim()),
+      label: item.sentiment.toLowerCase().trim(),
+      score: labels[item.sentiment.toLowerCase().trim()],
+    };
+  })
 
-  // console.log(csvData, 'csvData')
+  // balance data 
 
-  console.log("positive items:", csvData.filter((item) => item.score === 1).length);
-  console.log("negative items:", csvData.filter((item) => item.score === -1).length);
+  const positiveData = csvData.filter((item) => item.score === 1);
+  const negativeData = csvData.filter((item) => item.score === 0);
+
+  const balancedData = positiveData.slice(0, negativeData.length).concat(negativeData);
+
+  console.log("positive balanced items:", balancedData.filter((item) => item.score === 1).length);
+  console.log("negative balanced items:", balancedData.filter((item) => item.score === -1).length);
 
   const container = await containerBootstrap();
   container.use(Nlp);
@@ -42,8 +55,8 @@ const training = async () => {
   
 
   // TRAINING
-  if (csvData) {
-    csvData.forEach((item) => {
+  if (balancedData) {
+    balancedData.forEach((item) => {
       nlp.addDocument("es", item.text, item.label);
     });
   }
@@ -54,8 +67,13 @@ const training = async () => {
 };
 
 const getTrainedResponse = async (text) => {
-  const response = await nlpModel.process("es", text);
-  return response;
+  const {locale, utterance, language, classifications} = await nlpModel.process("es", text);
+  return {
+    locale,
+    utterance,
+    language,
+    classifications
+  };
 };
 
 module.exports = {training, getTrainedResponse};
