@@ -66,14 +66,28 @@ const training = async () => {
 
 };
 
-const getTrainedResponse = async (text) => {
-  const {locale, utterance, language, classifications} = await nlpModel.process("es", text);
-  return {
-    locale,
-    utterance,
-    language,
-    classifications
-  };
+const getTrainedResponse = async (body) => {
+  const responses = [];
+
+  try {
+    const promises = body.map(async (element) => {
+      const { textMessage } = element;
+      console.log(textMessage);
+      const { classifications } = await nlpModel.process("es", textMessage);
+
+      return { ...element, qualification: classifications[0].intent, model: "NlpJs" };
+    });
+
+    const result = await Promise.all(promises);
+    console.log(result);
+    responses.push(result);
+  } catch (error) {
+    console.error(error);
+  }
+
+  console.log(responses.length, "length");
+  return responses;
 };
+
 
 module.exports = {training, getTrainedResponse};

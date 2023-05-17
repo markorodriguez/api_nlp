@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = 3000 || process.env.PORT;
+const port = 7000 || process.env.PORT;
 
 const {training, getTrainedResponse} = require('./training')
 const sentiment = require('./sentiment')
@@ -21,8 +21,9 @@ app.post("/sentiment", async (req, res) => {
   res.json(result)
 });
 
-app.post("/trained", async (req, res) => {
-  const { text } = req.body
-  const result = await getTrainedResponse(text)
+app.post("/api/trained-model", async (req, res) => {
+  const body = req.body
+  const result = await getTrainedResponse(body)
+  console.log(result.length)
   res.json(result)
 });
