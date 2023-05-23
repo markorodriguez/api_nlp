@@ -9,7 +9,6 @@ const sentiment = async (text) => {
   container.use(LangEs);
   const sentiment = new SentimentAnalyzer({ container });
   const result = await sentiment.process({ locale: 'es', text });
-  console.log(result);
   return result.sentiment;
 }
 
